@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "818279403349",
+    "project_id": "do-an-da-nganh",
+    "storage_bucket": "do-an-da-nganh.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:818279403349:android:45f72d91d1025a7045a9dc",
+        "android_client_info": {
+          "package_name": "com.example.do_an_da_nganh"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "818279403349-k7ugg8p3edskgbgq3sdfo5ok1pdjt5ef.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUos0ecnVSSjs_8hpCvlAD_Kkk7786Gwg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "818279403349-k7ugg8p3edskgbgq3sdfo5ok1pdjt5ef.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
