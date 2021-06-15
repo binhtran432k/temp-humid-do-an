@@ -1,3 +1,4 @@
+import 'package:do_an_da_nganh/page/HomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:do_an_da_nganh/config.dart';
@@ -16,7 +17,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: "Iot smart building".toUpperCase(),
       theme: THEME,
-      home: Scaffold(body: Text('Hello World')),
+      //home: Test(),
+      home: HomePage(),
     );
   }
 }
