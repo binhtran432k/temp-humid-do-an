@@ -1,11 +1,9 @@
-import 'package:do_an_da_nganh/model/UserModel.dart';
 import 'package:do_an_da_nganh/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class LogDateSelection extends StatefulWidget {
-  final UserModel userModel;
   final Function(DateTime, DateTime) viewFunction;
-  LogDateSelection(this.userModel, this.viewFunction);
+  LogDateSelection(this.viewFunction);
   @override
   _LogDateSelectionState createState() => _LogDateSelectionState();
 }

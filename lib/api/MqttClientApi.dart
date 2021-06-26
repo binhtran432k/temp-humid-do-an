@@ -139,6 +139,8 @@ class MqttClientApi {
     _client.connectionMessage = connMess;
     try {
       print('Connecting');
+      print('username' + username);
+      print('key' + key);
       await _client.connect();
     } catch (e) {
       print('Exception: $e');

@@ -274,6 +274,7 @@ class MyButton extends Padding {
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
+          textAlign: TextAlign.center,
         ),
       ),
     ];
@@ -284,7 +285,6 @@ class MyButton extends Padding {
       text: TextSpan(
         children: children,
       ),
-      textAlign: TextAlign.center,
     );
   }
 }
