@@ -13,49 +13,13 @@ import 'package:do_an_da_nganh/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:weather_icons/weather_icons.dart';
 
-class DeviceController extends StatefulWidget {
-  final UserModel userModel;
-  DeviceController(this.userModel);
-
-  @override
-  _DeviceControllerState createState() => _DeviceControllerState();
-}
-
-class _DeviceControllerState extends State<DeviceController> {
-  List<RoomModel> _roomModels = [];
-  late RoomModel _currentRoom;
-  StreamController<RoomModel> _roomStreamController =
-      StreamController<RoomModel>();
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _roomStreamController.close();
-    super.dispose();
-  }
-
-  Future<void> _loadData() async {
-    this._roomModels = await FirebaseApi.getRooms();
-    _setRoomById(widget.userModel.roomId);
-  }
-
-  void _setRoomById(String id) {
-    this._roomModels.forEach((room) {
-      if (room.id == id) {
-        this._currentRoom = room;
-      }
-    });
-    _roomStreamController.add(_currentRoom);
-  }
+class DeviceController extends StatelessWidget {
+  DeviceController();
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _loadData(),
+    return FutureBuilder<List<RoomModel>>(
+      future: FirebaseApi.getRooms(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           return Scaffold(
@@ -66,36 +30,7 @@ class _DeviceControllerState extends State<DeviceController> {
                   leading: MySliverAppBar.defaultLedding(context),
                 ),
                 MySliverBody(
-                  child: Column(
-                    children: [
-                      MyDropdown(
-                        value: _currentRoom.id,
-                        items: _roomModels.map<DropdownMenuItem<String>>(
-                            (RoomModel roomModel) {
-                          return DropdownMenuItem<String>(
-                            value: roomModel.id,
-                            child: Text(roomModel.name),
-                          );
-                        }).toList(),
-                        labelText: "Phòng Ban",
-                        onChanged: (String? roomId) {
-                          if (roomId != null) {
-                            _setRoomById(roomId);
-                          }
-                        },
-                      ),
-                      StreamBuilder<RoomModel>(
-                        stream: _roomStreamController.stream,
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return DeviceControllerBody(
-                                widget.userModel, _currentRoom);
-                          }
-                          return LinearProgressIndicator();
-                        },
-                      ),
-                    ],
-                  ),
+                  child: DeviceControllerBody(snapshot.data!),
                 ),
               ],
             ),
@@ -107,10 +42,32 @@ class _DeviceControllerState extends State<DeviceController> {
   }
 }
 
-class DeviceControllerBody extends StatelessWidget {
-  final UserModel _userModel;
-  final RoomModel _currentRoom;
-  DeviceControllerBody(this._userModel, this._currentRoom);
+class DeviceControllerBody extends StatefulWidget {
+  final List<RoomModel> roomModels;
+  DeviceControllerBody(this.roomModels);
+
+  @override
+  _DeviceControllerBodyState createState() => _DeviceControllerBodyState();
+}
+
+class _DeviceControllerBodyState extends State<DeviceControllerBody> {
+  late RoomModel _currentRoom;
+
+  @override
+  void initState() {
+    super.initState();
+    _setRoomById(UserModel.instance!.roomId);
+  }
+
+  void _setRoomById(String id) {
+    widget.roomModels.forEach((room) {
+      if (room.id == id) {
+        setState(() {
+          this._currentRoom = room;
+        });
+      }
+    });
+  }
 
   Future<Map> _loadRoomData() async {
     MqttClientApi mqtt = MqttClientApi(_currentRoom.isReal);
@@ -126,55 +83,82 @@ class DeviceControllerBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map>(
-      future: _loadRoomData(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          Map data = snapshot.data!;
-          return DeviceControllerSubBody(
-              data["mqtt"], _userModel, _currentRoom, data["deviceModel"]);
-        }
-        return LinearProgressIndicator();
-      },
+    return Column(
+      children: [
+        MyDropdown(
+          value: _currentRoom.id,
+          items: widget.roomModels
+              .map<DropdownMenuItem<String>>((RoomModel roomModel) {
+            return DropdownMenuItem<String>(
+              value: roomModel.id,
+              child: Text(roomModel.name),
+            );
+          }).toList(),
+          labelText: "Phòng Ban",
+          onChanged: (String? roomId) {
+            if (roomId != null) {
+              _setRoomById(roomId);
+            }
+          },
+        ),
+        FutureBuilder<Map>(
+          future: _loadRoomData(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              Map data = snapshot.data!;
+              return DeviceControllerSubBody(
+                  data["mqtt"], _currentRoom, data["deviceModel"]);
+            }
+            return LinearProgressIndicator();
+          },
+        ),
+      ],
     );
   }
 }
 
 class DeviceControllerSubBody extends StatefulWidget {
   final DeviceModel deviceModel;
-  final UserModel userModel;
   final RoomModel currentRoom;
   final MqttClientApi mqtt;
 
-  DeviceControllerSubBody(
-      this.mqtt, this.userModel, this.currentRoom, this.deviceModel);
+  DeviceControllerSubBody(this.mqtt, this.currentRoom, this.deviceModel);
   @override
   _DeviceControllerSubBodyState createState() =>
       _DeviceControllerSubBodyState();
 }
 
 class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
-  int _currentCoolIndex = 0;
+  late int _currentCoolIndex;
   late bool _isClockwise;
 
   @override
   void initState() {
     super.initState();
+    _currentCoolIndex = 0;
     widget.mqtt.addListen(_update);
-    CoolDevice cool = widget.deviceModel.cools[_currentCoolIndex];
-    if (cool.name == 'DRV_PWM') {
-      if (cool.level >= 0) {
-        _isClockwise = true;
-      } else {
-        _isClockwise = false;
-      }
-    }
   }
 
   @override
   void dispose() {
     widget.mqtt.disconnect();
     super.dispose();
+  }
+
+  void setCoolIndexNext() {
+    if (_currentCoolIndex < widget.deviceModel.cools.length - 1) {
+      setState(() {
+        _currentCoolIndex++;
+      });
+    }
+  }
+
+  void setCoolIndexBack() {
+    if (_currentCoolIndex > 0) {
+      setState(() {
+        _currentCoolIndex--;
+      });
+    }
   }
 
   Future<void> _publish(String topic, String message) async {
@@ -418,9 +402,22 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
   }
 
   Widget _coolController() {
+    Color backColor = Colors.transparent;
+    Color nextColor = Colors.transparent;
+    if (_currentCoolIndex > 0) {
+      backColor = Colors.white;
+    }
+    if (_currentCoolIndex < widget.deviceModel.cools.length - 1) {
+      nextColor = Colors.white;
+    }
     CoolDevice cool = widget.deviceModel.cools[_currentCoolIndex];
     Widget control;
     if (cool.name == "DRV_PWM") {
+      if (cool.level >= 0) {
+        _isClockwise = true;
+      } else {
+        _isClockwise = false;
+      }
       control = _drvController(cool);
     } else if (cool.name == "FAN") {
       control = _fanController(cool);
@@ -429,6 +426,37 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
     }
     return Column(
       children: [
+        RichText(
+          text: TextSpan(
+            children: [
+              WidgetSpan(
+                child: IconButton(
+                  iconSize: 40,
+                  color: backColor,
+                  icon: Icon(Icons.arrow_left),
+                  onPressed: setCoolIndexBack,
+                ),
+                alignment: PlaceholderAlignment.middle,
+              ),
+              WidgetSpan(
+                child: Text(
+                  '${cool.name}_${cool.id}',
+                  style: TextStyle(fontSize: 20),
+                ),
+                alignment: PlaceholderAlignment.middle,
+              ),
+              WidgetSpan(
+                child: IconButton(
+                  iconSize: 40,
+                  color: nextColor,
+                  icon: Icon(Icons.arrow_right),
+                  onPressed: setCoolIndexNext,
+                ),
+                alignment: PlaceholderAlignment.middle,
+              ),
+            ],
+          ),
+        ),
         Image.asset(
           cool.getImage(),
           width: double.infinity,

@@ -6,9 +6,7 @@ import 'package:flutter/material.dart';
 
 class InformationUpdation extends StatelessWidget {
   //static const String routeName = '/register';
-  final UserModel userModel;
-
-  InformationUpdation(this.userModel);
+  InformationUpdation();
 
   Future<List<RoomModel>> _loadData() async {
     return await FirebaseApi.getRooms();
@@ -20,7 +18,7 @@ class InformationUpdation extends StatelessWidget {
       future: _loadData(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          return UpdateInformationBody(snapshot.data!, userModel);
+          return UpdateInformationBody(snapshot.data!);
         }
         return MySplashScreen();
       },
@@ -30,8 +28,7 @@ class InformationUpdation extends StatelessWidget {
 
 class UpdateInformationBody extends StatefulWidget {
   final List<RoomModel> roomModels;
-  final UserModel userModel;
-  UpdateInformationBody(this.roomModels, this.userModel);
+  UpdateInformationBody(this.roomModels);
 
   @override
   _UpdateInformationBodyState createState() => _UpdateInformationBodyState();
@@ -52,10 +49,11 @@ class _UpdateInformationBodyState extends State<UpdateInformationBody> {
   @override
   void initState() {
     super.initState();
-    _emailController.text = widget.userModel.email;
-    _nameController.text = widget.userModel.name;
-    _sex = widget.userModel.sex;
-    _roomId = widget.userModel.roomId;
+    UserModel userModel = UserModel.instance!;
+    _emailController.text = userModel.email;
+    _nameController.text = userModel.name;
+    _sex = userModel.sex;
+    _roomId = userModel.roomId;
     _isWaiting = false;
   }
 
@@ -70,20 +68,23 @@ class _UpdateInformationBodyState extends State<UpdateInformationBody> {
   Future<void> _submitUpdate() async {
     setState(() {
       _isWaiting = true;
-      _updateUser().then((errNum) {
-        if (errNum == 0) {
-          String description = "Chỉnh sửa tài khoản thành công!";
-          Color color = Colors.greenAccent;
-          ScaffoldMessenger.of(context).showSnackBar(
-              snackbarDialog(content: Text(description), color: color));
-          Navigator.of(context).pop();
-        } else if (errNum == 1) {
-          String description = "Chỉnh sửa tài khoản thất bại!" +
-              "\nHãy thử đăng xuất và chỉnh sửa lại.";
-          Color color = Colors.redAccent;
-          ScaffoldMessenger.of(context).showSnackBar(
-              snackbarDialog(content: Text(description), color: color));
-        }
+    });
+    _updateUser().then((errNum) {
+      if (errNum == 0) {
+        String description = "Chỉnh sửa tài khoản thành công!";
+        Color color = Colors.greenAccent;
+        ScaffoldMessenger.of(context).showSnackBar(
+            snackbarDialog(content: Text(description), color: color));
+        Navigator.of(context).pop();
+      } else if (errNum == 1) {
+        String description = "Chỉnh sửa tài khoản thất bại!" +
+            "\nHãy thử đăng xuất và chỉnh sửa lại.";
+        Color color = Colors.redAccent;
+        ScaffoldMessenger.of(context).showSnackBar(
+            snackbarDialog(content: Text(description), color: color));
+      }
+      setState(() {
+        _isWaiting = false;
       });
     });
   }
@@ -92,27 +93,34 @@ class _UpdateInformationBodyState extends State<UpdateInformationBody> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       try {
+        UserModel userModel = UserModel.instance!;
         String? email;
         String? password;
         String? roomId;
         String? sex;
-        String name = _nameController.text;
-        if (_emailController.text != widget.userModel.email) {
+        String? name;
+        if (_nameController.text != userModel.name) {
+          name = _nameController.text;
+        }
+        if (_emailController.text != userModel.email) {
           email = _emailController.text;
         }
         if (_passwordController.text != '') {
           password = _passwordController.text;
         }
-        if (_roomId != widget.userModel.roomId) {
+        if (_roomId != userModel.roomId) {
           roomId = _roomId;
         }
-        if (_sex != widget.userModel.sex) {
+        if (_sex != userModel.sex) {
           sex = _sex;
         }
-        return await FirebaseApi.updateUser(
-                email, password, name, null, roomId, sex)
-            ? 0
-            : 1;
+        bool isSuccess = await FirebaseApi.updateUser(
+            email, password, name, null, roomId, sex);
+        if (isSuccess) {
+          UserModel.instance!.change(email, name, null, sex, roomId);
+          UserModel.callback(() {});
+        }
+        return isSuccess ? 0 : 1;
       } catch (e) {
         print(e.toString());
       }
@@ -228,9 +236,8 @@ class _UpdateInformationBodyState extends State<UpdateInformationBody> {
                   ),
                   SizedBox(height: 20),
                   MyButton(
-                    child: Text(
+                    child: MyButton.defaultText(
                       'Cập nhật'.toUpperCase(),
-                      textAlign: TextAlign.center,
                     ),
                     onPressed: _submitUpdate,
                   ),

@@ -7,10 +7,9 @@ import 'package:do_an_da_nganh/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class DeviceLogViewer extends StatelessWidget {
-  final UserModel userModel;
   final DateTime fromTime;
   final DateTime toTime;
-  DeviceLogViewer(this.userModel, this.fromTime, this.toTime);
+  DeviceLogViewer(this.fromTime, this.toTime);
 
   Future<List<RoomModel>> _loadData() async {
     return await FirebaseApi.getRooms();
@@ -30,8 +29,7 @@ class DeviceLogViewer extends StatelessWidget {
                   leading: MySliverAppBar.defaultLedding(context),
                 ),
                 MySliverBody(
-                  child: DeviceLogViewerBody(
-                      userModel, fromTime, toTime, snapshot.data!),
+                  child: DeviceLogViewerBody(fromTime, toTime, snapshot.data!),
                 ),
               ],
             ),
@@ -44,11 +42,10 @@ class DeviceLogViewer extends StatelessWidget {
 }
 
 class DeviceLogViewerBody extends StatefulWidget {
-  final UserModel userModel;
   final DateTime fromTime;
   final DateTime toTime;
   final List<RoomModel> rooms;
-  DeviceLogViewerBody(this.userModel, this.fromTime, this.toTime, this.rooms);
+  DeviceLogViewerBody(this.fromTime, this.toTime, this.rooms);
 
   @override
   _DeviceLogViewerBodyState createState() => _DeviceLogViewerBodyState();
@@ -59,7 +56,7 @@ class _DeviceLogViewerBodyState extends State<DeviceLogViewerBody> {
   @override
   void initState() {
     super.initState();
-    _setRoomById(widget.userModel.roomId);
+    _setRoomById(UserModel.instance!.roomId);
   }
 
   Future<DeviceModel> _loadRoomData() async {
@@ -193,7 +190,7 @@ class _DeviceLogViewerSubBodyState extends State<DeviceLogViewerSubBody> {
           getTitles: (value) {
             return value.toInt().toString();
           },
-          interval: ((maxY - minY + 1) / 5).roundToDouble(),
+          interval: (maxY - minY) <= 5 ? 1 : (maxY - minY) / 4,
           reservedSize: 28,
           margin: 12,
         ),
@@ -268,7 +265,7 @@ class _DeviceLogViewerSubBodyState extends State<DeviceLogViewerSubBody> {
           getTitles: (value) {
             return getTimeFromDate(data[value.toInt()]['time']);
           },
-          interval: ((maxX - minX + 1) / 4).roundToDouble(),
+          interval: (maxX - minX) < 3 ? 1 : (maxX - minX) / 2,
           margin: 8,
         ),
         leftTitles: SideTitles(
@@ -281,7 +278,7 @@ class _DeviceLogViewerSubBodyState extends State<DeviceLogViewerSubBody> {
           getTitles: (value) {
             return value.toInt().toString();
           },
-          interval: ((maxY - minY + 1) / 5).roundToDouble(),
+          interval: (maxY - minY) <= 5 ? 1 : (maxY - minY) / 4,
           reservedSize: 28,
           margin: 12,
         ),
@@ -422,7 +419,7 @@ class _DeviceLogViewerSubBodyState extends State<DeviceLogViewerSubBody> {
                         "Nhiệt Độ",
                         0,
                         100,
-                        "*C",
+                        "\u00B0C",
                         snapshot.data!
                             .map((e) => {
                                   'time': e['timestamp'],
@@ -449,11 +446,6 @@ class _DeviceLogViewerSubBodyState extends State<DeviceLogViewerSubBody> {
                             .toList()),
                   ],
                 );
-                // return Column(
-                //   children: snapshot.data!
-                //       .map((e) => Text('${e['time']}, ${e['data']}'))
-                //       .toList(),
-                // );
               }
             }
             return LinearProgressIndicator();

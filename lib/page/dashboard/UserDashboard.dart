@@ -1,6 +1,5 @@
 import 'package:do_an_da_nganh/api/FirebaseApi.dart';
 import 'package:do_an_da_nganh/config.dart';
-import 'package:do_an_da_nganh/model/UserModel.dart';
 import 'package:do_an_da_nganh/page/dashboard/user/DeviceLogViewer.dart';
 import 'package:do_an_da_nganh/page/dashboard/user/DeviceController.dart';
 import 'package:do_an_da_nganh/page/dashboard/user/LogDateSelection.dart';
@@ -9,9 +8,7 @@ import 'package:do_an_da_nganh/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class UserDashboard extends StatelessWidget {
-  final UserModel _userModel;
-
-  UserDashboard(this._userModel);
+  UserDashboard();
 
   Future<void> _logout() async {
     FirebaseApi.logout();
@@ -27,7 +24,7 @@ class UserDashboard extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => InformationUpdation(_userModel),
+                builder: (context) => InformationUpdation(),
               ),
             );
           },
@@ -38,7 +35,7 @@ class UserDashboard extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => DeviceController(_userModel),
+                builder: (context) => DeviceController(),
               ),
             );
           },
@@ -49,13 +46,12 @@ class UserDashboard extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => LogDateSelection(_userModel,
-                    (DateTime fromTime, DateTime toTime) {
+                builder: (context) =>
+                    LogDateSelection((DateTime fromTime, DateTime toTime) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          DeviceLogViewer(_userModel, fromTime, toTime),
+                      builder: (context) => DeviceLogViewer(fromTime, toTime),
                     ),
                   );
                 }),

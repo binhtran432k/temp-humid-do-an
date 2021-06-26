@@ -5,14 +5,19 @@ import 'package:do_an_da_nganh/page/dashboard/UserDashboard.dart';
 import 'package:do_an_da_nganh/utils/utils.dart';
 import 'package:flutter/material.dart';
 
-class Dashboard extends StatelessWidget {
+class Dashboard extends StatefulWidget {
   //static const String routeName = '/dashboard';
+  @override
+  _DashboardState createState() => _DashboardState();
+}
 
-  Widget _checkRole(UserModel userModel) {
+class _DashboardState extends State<Dashboard> {
+  Widget _checkRole() {
+    UserModel userModel = UserModel.instance!;
     if (userModel.role == 'admin') {
-      return AdminDashboard(userModel);
+      return AdminDashboard();
     } else {
-      return UserDashboard(userModel);
+      return UserDashboard();
     }
   }
 
@@ -22,6 +27,8 @@ class Dashboard extends StatelessWidget {
       future: FirebaseApi.getUser(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
+          UserModel.instance = snapshot.data;
+          UserModel.callback = setState;
           return Scaffold(
             body: MyScrollView(
               slivers: [
@@ -31,7 +38,7 @@ class Dashboard extends StatelessWidget {
                   automaticallyImplyLeading: false,
                 ),
                 MySliverBody(
-                  child: _checkRole(snapshot.data!),
+                  child: _checkRole(),
                 ),
               ],
             ),
