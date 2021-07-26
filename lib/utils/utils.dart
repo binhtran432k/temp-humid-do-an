@@ -216,7 +216,6 @@ class MyTextFormField extends Padding {
   }) : super(
           padding: padding,
           child: TextFormField(
-            showCursor: false,
             readOnly: readOnly,
             onFieldSubmitted: onFieldSubmitted,
             onTap: onTap,
