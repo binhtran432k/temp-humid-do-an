@@ -20,12 +20,8 @@ class MeasureDevice extends Device {
   int humidity;
   bool isReal;
 
-  static String getTopic(bool isReal) {
-    if (isReal) {
-      return REAL_PRE_FEED + TEMP_HUMID_FEED;
-    } else {
-      return PRE_FEED + TEMP_HUMID_FEED;
-    }
+  static String getTopic() {
+    return TEMP_HUMID_FEED;
   }
 
   MeasureDevice(String id, this.temperature, this.humidity)
@@ -75,12 +71,8 @@ class CoolDevice extends Device {
   bool isOn;
   bool isReal;
 
-  static String getTopic(bool isReal) {
-    if (isReal) {
-      return REAL_PRE_FEED + REAL_FAN_FEED;
-    } else {
-      return PRE_FEED + COOL_FEED;
-    }
+  static String getTopic() {
+    return REAL_FAN_FEED;
   }
 
   CoolDevice(String id, this.level, String name, this.min, this.max, this.isOn)
