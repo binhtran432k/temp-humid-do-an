@@ -6,5 +6,5 @@ class RoomModel {
   bool isReal;
 
   RoomModel(this.id, this.name, this.measure, this.cools)
-      : isReal = false; //id == "7" ? true : false;
+      : isReal = id == "7" ? true : false;
 }

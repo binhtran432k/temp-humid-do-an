@@ -6,8 +6,6 @@ const double BUTTON_HEIGHT = 50;
 const EdgeInsetsGeometry DEFAULT_PADDING =
     const EdgeInsets.symmetric(vertical: 5);
 
-const PRE_FEED = "langkhach11112/feeds/";
-const REAL_PRE_FEED = "CSE_BBC/feeds/";
 const COOL_FEED = "bk-iot-cool";
 const TEMP_HUMID_FEED = "bk-iot-temp-humid";
 const REAL_FAN_FEED = "bk-iot-drv";

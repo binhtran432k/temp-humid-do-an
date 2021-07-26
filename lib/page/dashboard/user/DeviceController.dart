@@ -71,8 +71,8 @@ class _DeviceControllerBodyState extends State<DeviceControllerBody> {
 
   Future<Map> _loadRoomData() async {
     MqttClientApi mqtt = MqttClientApi(_currentRoom.isReal);
-    await mqtt.subscribe(MeasureDevice.getTopic(_currentRoom.isReal));
-    await mqtt.subscribe(CoolDevice.getTopic(_currentRoom.isReal));
+    await mqtt.subscribe(MeasureDevice.getTopic());
+    await mqtt.subscribe(CoolDevice.getTopic());
     DeviceModel deviceModel = await FirebaseApi.getDeviceControllerByIds(
         _currentRoom.measure, _currentRoom.cools);
     Map data = Map();
@@ -130,7 +130,7 @@ class DeviceControllerSubBody extends StatefulWidget {
 
 class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
   late int _currentCoolIndex;
-  late bool _isClockwise;
+  bool _isClockwise = true;
 
   @override
   void initState() {
@@ -166,16 +166,9 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
   }
 
   Future<void> _update(String topic, String payload) async {
-    if (topic == CoolDevice.getTopic(widget.currentRoom.isReal)) {
+    if (topic == CoolDevice.getTopic()) {
       try {
         Map<String, dynamic> coolDataJson = jsonDecode(payload);
-        if (coolDataJson['name'] == 'DRV_PWM') {
-          if (int.parse(coolDataJson['data']) > 0) {
-            _isClockwise = true;
-          } else if (int.parse(coolDataJson['data']) < 0) {
-            _isClockwise = false;
-          }
-        }
         widget.deviceModel.cools.forEach((cool) {
           if (coolDataJson['id'] == cool.id) {
             if (cool.id == widget.deviceModel.cools[_currentCoolIndex].id) {
@@ -190,7 +183,7 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
       } catch (e) {
         print(e.toString());
       }
-    } else if (topic == MeasureDevice.getTopic(widget.currentRoom.isReal)) {
+    } else if (topic == MeasureDevice.getTopic()) {
       try {
         Map<String, dynamic> measureDataJson = jsonDecode(payload);
         MeasureDevice measure = widget.deviceModel.measure!;
@@ -308,8 +301,7 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
               child: InkResponse(
                 onTap: () {
                   if (cool.isOn) {
-                    this._publish(
-                        CoolDevice.getTopic(widget.currentRoom.isReal),
+                    this._publish(CoolDevice.getTopic(),
                         cool.getJson(cool.getNext(_isClockwise).toString()));
                   }
                 },
@@ -324,8 +316,7 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
             IconButton(
               color: !_isClockwise ? PRIMARY_COLOR : Colors.white,
               onPressed: () {
-                this._publish(CoolDevice.getTopic(widget.currentRoom.isReal),
-                    cool.getJson("0"));
+                this._publish(CoolDevice.getTopic(), cool.getJson("0"));
                 this._isClockwise = false;
               },
               iconSize: 50,
@@ -334,8 +325,7 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
             IconButton(
               color: _isClockwise ? PRIMARY_COLOR : Colors.white,
               onPressed: () {
-                this._publish(CoolDevice.getTopic(widget.currentRoom.isReal),
-                    cool.getJson("0"));
+                this._publish(CoolDevice.getTopic(), cool.getJson("0"));
                 this._isClockwise = true;
               },
               iconSize: 50,
@@ -377,8 +367,7 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
               child: InkResponse(
                 onTap: () {
                   if (cool.isOn) {
-                    this._publish(
-                        CoolDevice.getTopic(widget.currentRoom.isReal),
+                    this._publish(CoolDevice.getTopic(),
                         cool.getJson(cool.getNext().toString()));
                   }
                 },
@@ -391,8 +380,7 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
           color: PRIMARY_COLOR,
           onPressed: () {
             String nextState = cool.isOn ? "OFF" : "ON";
-            this._publish(CoolDevice.getTopic(widget.currentRoom.isReal),
-                cool.getJson(nextState));
+            this._publish(CoolDevice.getTopic(), cool.getJson(nextState));
           },
           iconSize: 50,
           icon: Icon(Icons.power_settings_new_rounded),
@@ -413,9 +401,9 @@ class _DeviceControllerSubBodyState extends State<DeviceControllerSubBody> {
     CoolDevice cool = widget.deviceModel.cools[_currentCoolIndex];
     Widget control;
     if (cool.name == "DRV_PWM") {
-      if (cool.level >= 0) {
+      if (cool.level > 0) {
         _isClockwise = true;
-      } else {
+      } else if (cool.level < 0) {
         _isClockwise = false;
       }
       control = _drvController(cool);

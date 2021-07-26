@@ -13,6 +13,7 @@ class MqttClientApi {
   var _client;
   late String _identifier;
   Future<Null>? isWorking;
+  late String username;
   bool isReal;
 
   MqttClientApi([this.isReal = false]) {
@@ -116,6 +117,7 @@ class MqttClientApi {
       username = connectJson["username"];
       key = connectJson["key"];
     }
+    this.username = username;
     _client = mqttsetup.setup(host, key, port);
     //_client.logging(on: true);
 
@@ -139,8 +141,8 @@ class MqttClientApi {
     _client.connectionMessage = connMess;
     try {
       print('Connecting');
-      print('username' + username);
-      print('key' + key);
+      print('username: ' + username);
+      print('key: ' + key);
       await _client.connect();
     } catch (e) {
       print('Exception: $e');
@@ -177,7 +179,8 @@ class MqttClientApi {
   Future<void> _subscribe(String topic,
       {MqttQos qos = MqttQos.atLeastOnce}) async {
     // for now hardcoding the topic
-    _client.subscribe(topic, qos);
+    String adafruitTopic = this.username + "/feeds/" + topic;
+    _client.subscribe(adafruitTopic, qos);
   }
 
   void addListen(dynamic callback) {
@@ -189,7 +192,8 @@ class MqttClientApi {
           MqttPublishPayload.bytesToStringAsString(message.payload.message!);
 
       print('Received message: $payload from topic: ${c[0].topic}');
-      callback(c[0].topic, payload);
+      String normalTopic = c[0].topic.split("/")[2];
+      callback(normalTopic, payload);
     });
   }
 
@@ -210,7 +214,9 @@ class MqttClientApi {
     if (await _connectToClient() == true) {
       final MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
       builder.addString(value);
-      _client.publishMessage(topic, qos, builder.payload, retain: retain);
+      String adafruitTopic = this.username + "/feeds/" + topic;
+      _client.publishMessage(adafruitTopic, qos, builder.payload,
+          retain: retain);
     }
 
     // unlock
